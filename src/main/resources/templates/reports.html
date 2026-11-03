@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 BÁO CÁO TÀI CHÍNH THÁNG - BunLedger Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        input, button, select, a.touch-btn {
+            min-height: 44px;
+        }
+        .scrollbar-none::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-none {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-gray-800 antialiased min-h-screen">
+
+    <!-- Container Giao Diện Web Rộng Rãi: max-w-7xl trên Desktop -->
+    <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col justify-between min-h-screen">
+
+        <div>
+            <!-- Header & Navigation Bar Thương Hiệu BunLedger -->
+            <header class="mb-4 sm:mb-6">
+                <div class="bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white shadow-lg relative overflow-hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
+                        <!-- Tên trang & Subtitle -->
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-2xl sm:text-3xl shrink-0 shadow-inner">
+                                📊
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h1 class="text-xl sm:text-2xl font-black tracking-tight uppercase">BÁO CÁO TÀI CHÍNH THÁNG</h1>
+                                    <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-amber-500/40 px-2 py-0.5 rounded-full border border-amber-300/30">
+                                        BunLedger
+                                    </span>
+                                </div>
+                                <p class="text-xs sm:text-sm text-amber-100 mt-0.5 font-medium">Tổng kết doanh thu, chi phí, lãi ròng và xuất dữ liệu Excel</p>
+                            </div>
+                        </div>
+
+                        <!-- Cụm Tab Chuyển Đổi Trên Header: [ Sổ Hàng Ngày ] và [ Báo Cáo Tháng ] -->
+                        <div class="flex items-center gap-2 self-start sm:self-auto bg-black/20 backdrop-blur-md p-1.5 rounded-2xl border border-white/10 text-xs font-bold">
+                            <!-- Nút Sổ Hàng Ngày -->
+                            <a th:href="@{/}" 
+                               class="touch-btn px-4 py-2 rounded-xl text-amber-100 hover:text-white hover:bg-white/10 transition flex items-center gap-1.5">
+                                <span>🍜 Sổ Hàng Ngày</span>
+                            </a>
+                            <!-- Nút Báo Cáo Tháng (Active) -->
+                            <a th:href="@{/reports(month=${currentMonth})}" 
+                               class="touch-btn px-4 py-2 rounded-xl bg-white text-amber-900 shadow-sm flex items-center gap-1.5 transition">
+                                <span>📊 Báo Cáo Tháng</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Cụm điều hướng tháng (Month Navigation Bar) -->
+            <nav aria-label="Điều hướng tháng" class="bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-sm border border-gray-200 mb-4 sm:mb-6">
+                <div class="flex items-center justify-between gap-2">
+                    <!-- Nút Lùi 1 tháng [◀] -->
+                    <a th:href="@{/reports(month=${prevMonth})}" 
+                       class="touch-btn min-h-[44px] min-w-[44px] px-3 flex items-center justify-center rounded-xl bg-gray-50 hover:bg-amber-50 active:bg-amber-100 text-gray-700 hover:text-amber-800 border border-gray-200 hover:border-amber-300 transition shrink-0 select-none font-bold text-sm" 
+                       title="Lùi 1 tháng">
+                        <span>[◀]</span>
+                    </a>
+
+                    <!-- Khối thông tin tháng đang xem & Month Picker -->
+                    <div class="flex flex-col sm:flex-row items-center gap-2 text-center min-w-0">
+                        <div class="text-xs sm:text-sm font-semibold text-gray-600 flex items-center justify-center gap-1">
+                            <span>Báo Cáo:</span>
+                            <span class="font-extrabold text-gray-900 text-sm sm:text-base" th:text="${'Tháng ' + #temporals.format(currentMonth, 'MM/yyyy')}">Tháng 11/2026</span>
+                            <span th:if="${isCurrentMonth}" class="ml-1 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Tháng này
+                            </span>
+                        </div>
+
+                        <!-- Ô input native month -->
+                        <div class="w-full max-w-[170px]">
+                            <input type="month" 
+                                   id="monthPicker"
+                                   th:value="${currentMonth}" 
+                                   onchange="window.location.href='/reports?month=' + this.value"
+                                   title="Chọn tháng bất kỳ"
+                                   class="w-full min-h-[38px] text-center text-xs sm:text-sm font-bold text-gray-800 bg-amber-50/60 hover:bg-amber-50 border border-amber-200 rounded-xl px-2 py-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500 transition">
+                        </div>
+                    </div>
+
+                    <!-- Nút Tiến 1 tháng [▶] -->
+                    <div class="flex items-center gap-2">
+                        <a th:unless="${isCurrentMonth}" th:href="@{/reports}" 
+                           class="touch-btn hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition">
+                            <span>Về tháng này</span>
+                        </a>
+                        <a th:href="@{/reports(month=${nextMonth})}" 
+                           class="touch-btn min-h-[44px] min-w-[44px] px-3 flex items-center justify-center rounded-xl bg-gray-50 hover:bg-amber-50 active:bg-amber-100 text-gray-700 hover:text-amber-800 border border-gray-200 hover:border-amber-300 transition shrink-0 select-none font-bold text-sm" 
+                           title="Tiến 1 tháng">
+                            <span>[▶]</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- 4 Thẻ Tổng Hợp Tháng (Monthly KPI Cards) -->
+            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+                <!-- Thẻ 1: Tổng Thu Tháng -->
+                <div class="bg-white border border-gray-200 hover:border-gray-300 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            Tổng Thu Cả Tháng
+                        </span>
+                        <span class="w-7 h-7 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-xs">+</span>
+                    </div>
+                    <div class="text-2xl sm:text-3xl font-black text-gray-900 mt-2 truncate"
+                         th:text="${summary != null ? summary.formattedTotalIncome : '0 đ'}">
+                        0 đ
+                    </div>
+                    <p class="text-[11px] text-gray-400 mt-1">Toàn bộ doanh thu bán bún & nước</p>
+                </div>
+
+                <!-- Thẻ 2: Tổng Chi Tháng -->
+                <div class="bg-white border border-gray-200 hover:border-gray-300 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                            Tổng Chi Cả Tháng
+                        </span>
+                        <span class="w-7 h-7 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-xs">-</span>
+                    </div>
+                    <div class="text-2xl sm:text-3xl font-black text-gray-900 mt-2 truncate"
+                         th:text="${summary != null ? summary.formattedTotalExpense : '0 đ'}">
+                        0 đ
+                    </div>
+                    <p class="text-[11px] text-gray-400 mt-1">Toàn bộ chi phí nguyên liệu & vận hành</p>
+                </div>
+
+                <!-- Thẻ 3: Lợi Nhuận Tháng -->
+                <div class="bg-white border border-gray-200 hover:border-gray-300 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full"
+                                  th:classappend="${summary != null and summary.profitable} ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                            Lợi Nhuận Tháng
+                        </span>
+                        <span class="w-7 h-7 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-xs">=</span>
+                    </div>
+                    <div class="text-2xl sm:text-3xl font-black mt-2 truncate text-gray-900"
+                         th:text="${summary != null ? summary.formattedNetProfit : '0 đ'}">
+                        0 đ
+                    </div>
+                    <p class="text-[11px] mt-1 font-medium text-gray-400">
+                       <span th:if="${summary != null and summary.profitable}">Có lãi ròng - Tổng tiền thực tế</span>
+                       <span th:unless="${summary != null and summary.profitable}">Thâm hụt tài chính trong tháng</span>
+                    </p>
+                </div>
+
+                <!-- Thẻ 4: Lãi Trung Bình Mỗi Ngày Bán -->
+                <div class="bg-white border border-gray-200 hover:border-gray-300 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                            Lãi TB / Ngày Bán
+                        </span>
+                        <span class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-gray-100 text-gray-600 border border-gray-200"
+                              th:text="${summary != null ? summary.activeDays : 0} + ' ngày bán'">
+                            0 ngày bán
+                        </span>
+                    </div>
+                    <div class="text-2xl sm:text-3xl font-black text-gray-900 mt-2 truncate"
+                         th:text="${summary != null ? summary.formattedAverageDailyProfit : '0 đ'}">
+                        0 đ
+                    </div>
+                    <p class="text-[11px] text-gray-400 mt-1">Lợi nhuận trung bình mỗi ngày mở bán</p>
+                </div>
+            </section>
+
+            <!-- KHUNG CHÍNH GIAO DIỆN BÁO CÁO: 2 CỘT RỘNG RÃI TRÊN DESKTOP (lg:grid-cols-12) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+                <!-- CỘT TRÁI (lg:col-span-5): NÚT XUẤT CSV + CƠ CẤU CHI PHÍ TOÀN THÁNG -->
+                <div class="lg:col-span-5 space-y-6">
+                    <!-- Nút Xuất File CSV / Excel Phong Cách Bảng Tính Nổi Bật -->
+                    <div class="bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 text-white shadow-lg">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-3xl">📥</span>
+                            <div>
+                                <h3 class="text-lg font-black tracking-tight">Xuất Dữ Liệu Excel / CSV</h3>
+                                <p class="text-xs text-emerald-100">Sao lưu dữ liệu tháng, tương thích Microsoft Excel</p>
+                            </div>
+                        </div>
+                        <p class="text-xs text-emerald-100/90 mb-4">
+                            Tải về file <strong>.csv</strong> có mã hóa UTF-8 BOM chuẩn tiếng Việt có dấu, đầy đủ cột: Ngày, Loại, Mặt hàng, Số lượng, Số tiền và Ghi chú.
+                        </p>
+                        <a th:href="@{/export/csv(month=${currentMonth})}" 
+                           class="touch-btn w-full min-h-[50px] py-3.5 px-4 bg-white hover:bg-emerald-50 active:scale-[0.98] text-emerald-900 font-black text-sm sm:text-base rounded-2xl shadow-md transition flex items-center justify-center gap-2 select-none text-center cursor-pointer">
+                            <svg class="w-5 h-5 text-emerald-700" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                            <span>XUẤT FILE CSV (EXCEL)</span>
+                        </a>
+                    </div>
+
+                    <!-- Bảng / Xếp hạng Cơ Cấu Chi Phí Toàn Tháng -->
+                    <section class="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">🥩</span>
+                                <h2 class="text-base sm:text-lg font-black text-gray-900">Cơ Cấu Chi Tiêu Tháng</h2>
+                            </div>
+                            <span class="text-xs text-gray-400 font-medium" th:if="${expenseBreakdown != null}" th:text="${expenseBreakdown.size() + ' mặt hàng'}">0 mặt hàng</span>
+                        </div>
+
+                        <!-- Trạng thái rỗng nếu chưa có chi phí -->
+                        <div th:if="${expenseBreakdown == null or expenseBreakdown.empty}" 
+                             class="py-10 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                            <p class="text-sm font-bold text-gray-600">Tháng này chưa phát sinh chi phí nào</p>
+                            <p class="text-xs text-gray-400 mt-1">Các khoản chi nhập trong tháng sẽ hiển thị tỷ lệ tại đây</p>
+                        </div>
+
+                        <!-- Danh sách các mặt hàng chi tiêu với thanh Progress Bar mini -->
+                        <div th:unless="${expenseBreakdown == null or expenseBreakdown.empty}" class="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+                            <div th:each="item, stat : ${expenseBreakdown}" class="p-3 rounded-2xl bg-gray-50 hover:bg-amber-50/40 border border-gray-100 transition">
+                                <div class="flex items-center justify-between text-xs sm:text-sm font-bold mb-1.5">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <span class="w-5 h-5 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center text-[10px] font-bold shrink-0" th:text="${stat.count}">1</span>
+                                        <span class="text-gray-900 truncate" th:text="${item.itemName}">Thịt bò</span>
+                                    </div>
+                                    <div class="text-right shrink-0 ml-2">
+                                        <span class="text-gray-900 font-bold" th:text="${item.formattedAmount}">600.000 đ</span>
+                                        <span class="text-gray-500 font-semibold ml-1" th:text="'(' + ${#numbers.formatDecimal(item.percentage, 1, 1)} + '%)'">(75.0%)</span>
+                                    </div>
+                                </div>
+                                <!-- Thanh Progress Bar thể hiện tỷ lệ % -->
+                                <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                    <div class="bg-gray-400 h-2 rounded-full transition-all duration-500"
+                                         th:style="'width: ' + ${item.percentage} + '%'"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- CỘT PHẢI (lg:col-span-7): BẢNG KÊ CHI TIẾT TẤT CẢ GIAO DỊCH TRONG THÁNG (CÓ CỘT SỐ LƯỢNG) -->
+                <div class="lg:col-span-7">
+                    <section class="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">📋</span>
+                                <h2 class="text-base sm:text-lg font-black text-gray-900">Chi Tiết Giao Dịch Tháng</h2>
+                            </div>
+                            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600"
+                                  th:text="${transactions != null ? transactions.size() : 0} + ' giao dịch'">
+                                0 giao dịch
+                            </span>
+                        </div>
+
+                        <!-- Trạng thái rỗng nếu tháng chưa có giao dịch -->
+                        <div th:if="${transactions == null or transactions.empty}" 
+                             class="py-16 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                            <span class="text-4xl block mb-2">🍜</span>
+                            <p class="text-base font-bold text-gray-700">Chưa có giao dịch nào trong tháng này</p>
+                            <p class="text-xs text-gray-400 mt-1">Các khoản thu chi phát sinh trong tháng sẽ liệt kê đầy đủ tại đây</p>
+                        </div>
+
+                        <!-- Bảng kê chi tiết giao dịch (Có cột SỐ LƯỢNG) -->
+                        <div th:unless="${transactions == null or transactions.empty}" class="overflow-x-auto">
+                            <table class="w-full text-left text-xs sm:text-sm border-collapse">
+                                <thead>
+                                    <tr class="border-b border-gray-200 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                                        <th class="py-2.5 px-2">Ngày</th>
+                                        <th class="py-2.5 px-2">Loại</th>
+                                        <th class="py-2.5 px-3">Mặt hàng</th>
+                                        <th class="py-2.5 px-2 text-center">Số lượng</th>
+                                        <th class="py-2.5 px-3 text-right">Số tiền</th>
+                                        <th class="py-2.5 px-2 text-center">Xem</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    <tr th:each="tx : ${transactions}" class="hover:bg-gray-50 transition">
+                                        <!-- Cột Ngày -->
+                                        <td class="py-3 px-2 font-medium text-gray-600 whitespace-nowrap"
+                                            th:text="${#temporals.format(tx.transactionDate, 'dd/MM')}">
+                                            01/11
+                                        </td>
+                                        <!-- Cột Loại -->
+                                        <td class="py-3 px-2 whitespace-nowrap">
+                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md uppercase"
+                                                  th:classappend="${tx.type.name() == 'INCOME'} ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'"
+                                                  th:text="${tx.type.name() == 'INCOME'} ? 'THU' : 'CHI'">
+                                                THU
+                                            </span>
+                                        </td>
+                                        <!-- Cột Mặt hàng & Ghi chú -->
+                                        <td class="py-3 px-3">
+                                            <span class="font-bold text-gray-900 block" th:text="${tx.itemName}">Bún bò</span>
+                                            <span th:if="${tx.description != null and !tx.description.empty}" 
+                                                  class="text-[11px] text-gray-400 block truncate max-w-[160px]" 
+                                                  th:text="${tx.description}">
+                                                Ghi chú
+                                            </span>
+                                        </td>
+                                        <!-- CỘT SỐ LƯỢNG (HIỂN THỊ RÕ RÀNG) -->
+                                        <td class="py-3 px-2 text-center whitespace-nowrap">
+                                            <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-100 text-gray-700 border border-gray-200"
+                                                  th:text="'x' + (${tx.quantity != null ? tx.quantity : 1})">
+                                                x1
+                                            </span>
+                                        </td>
+                                        <!-- Cột Số tiền -->
+                                        <td class="py-3 px-3 text-right font-bold whitespace-nowrap"
+                                            th:classappend="${tx.type.name() == 'INCOME'} ? 'text-emerald-600' : 'text-gray-900'"
+                                            th:text="(${tx.type.name() == 'INCOME'} ? '+' : '-') + ${#numbers.formatDecimal(tx.amount, 0, 'POINT', 0, 'COMMA')} + ' đ'">
+                                            +50.000 đ
+                                        </td>
+                                        <!-- Cột Xem ngày -->
+                                        <td class="py-3 px-2 text-center whitespace-nowrap">
+                                            <a th:href="@{/(date=${tx.transactionDate})}" 
+                                               class="touch-btn inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-amber-800 hover:bg-amber-100 transition"
+                                               title="Xem ngày này trên Sổ Ngày">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                </svg>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-xs text-gray-500">
+            <p>🍜 <strong>BunLedger</strong> — Ứng dụng sổ thu chi quán bún gia đình • <a th:href="@{/}" class="text-amber-700 font-bold hover:underline">Quay lại Sổ Hàng Ngày</a></p>
+        </footer>
+    </div>
+</body>
+</html>
